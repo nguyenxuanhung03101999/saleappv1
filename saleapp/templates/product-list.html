@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý sản phẩm</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+    <script>
+        function delProduct(productId) {
+            fetch("/api/pro/" + productId, {
+                "method": "delete"
+            }).then(res => res.json()).then(res => {
+                if (res.status == 200) {
+                    var d = document.getElementById("product" + res.product_id);
+                    d.style.display = "None";
+                }
+            }).catch(function(err) {
+
+            })
+        }
+
+        function delPro(productId) {
+            fetch("/api/products/" + productId, {
+                "method": "delete"
+            }).then(res => res.json()).then(res => {
+                if (res.status == 200) {
+                    var d = document.getElementById("product" + res.product_id);
+                    d.style.display = "None";
+                }
+            });
+        }
+
+        function addToCart(id, name, price) {
+            fetch("/api/cart", {
+                body: JSON.stringify({
+                    "product_id": id,
+                    "name": name,
+                    "price": price
+                }),
+                method: "post",
+                headers: {"Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => {
+                var cart = document.getElementById("cartId");
+                cart.innerText = `(${data.quantity})`;
+            })
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <h1>QUẢN LÝ SẢN PHẨM</h1>
+        <form action="{{ url_for('product_list') }}">
+            <div>
+                <input type="text" name="keyword" placeholder="Nhập từ khóa cần tìm..." />
+                <input type="number" name="from_price" placeholder="Gía bắt đầu" />
+                <input type="number" name="to_price" placeholder="Gía kết thúc" />
+                <input type="submit" value="Tìm" />
+            </div>
+        </form>
+        <div>
+            <a href="{{ url_for('cart') }}">Giỏ hàng</a> <span class="badge badge-light" id="cartId">(0)</span>
+        </div>
+        <table border="1" width="100%">
+            {% for product in products %}
+            <tr  class="{% if request.args['product_id']==product.id|string %}bg-warning{% endif %}" id="product{{product.id}}">
+                <td>
+                    <img width="120" src="{{ product.image }}" alt="{{ product.name }}" />
+                </td>
+                <td>
+                    <h1>{{ product.name }}</h1>
+                </td>
+                <td>
+                    {{ product.description }}
+                </td>
+                <td>
+                    {{ "{:,.1f}".format(product.price) }} VNĐ
+                </td>
+                <td>
+                    <a href="javascript:;" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">Thêm vào giỏ</a> |
+                    <a href="{{ url_for('add_product', product_id=product.id) }}">Cập nhật</a> |
+                    <a href="javascript:;" onclick="delProduct({{ product.id }})">Xóa</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <h1>
+        <a href="{{ url_for('add_product') }}">Thêm sản phẩm</a>
+        <a href="{{ url_for('export_product') }}">Xuat danh sach san pham</a>
+    </h1>
+</body>
+</html>
